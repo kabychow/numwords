@@ -6,6 +6,7 @@
 package numwords
 
 import (
+	"strconv"
 	"strings"
 )
 
@@ -48,13 +49,31 @@ func ParseInt(s string) (int, error) {
 func ParseString(s string) (string, []string) {
 	in := explode(s)
 	outStr, outN := ParseStrings(in)
-	return strings.Join(outStr, " "), outN
+	return outStr, outN
+}
+
+func ParseInts(s string) (string, map[[2]int]int) {
+	out := map[[2]int]int{}
+	in := explode(s)
+	outStr, outN := ParseStrings(in)
+	lenOutStr := len(outStr)
+	tmp := outStr
+	for _, sn := range outN {
+		n, err := strconv.Atoi(sn)
+		if err == nil {
+			index := strings.Index(tmp, sn)
+			diff := lenOutStr - len(tmp)
+			tmp = strings.Replace(tmp, sn, "", 1)
+			out[[2]int{diff+index, diff+index+len(sn)}] = n
+		}
+	}
+	return outStr, out
 }
 
 // ParseStrings performs the same actions as ParseString but operates on a pre-
 // sanitized and split string. This method is exposed for convenience if further
 // processing of the string is required.
-func ParseStrings(in []string) ([]string, []string) {
+func ParseStrings(in []string) (string, []string) {
 	var outStr []string
 	var outN []string
 	buf := numbers{}
@@ -75,7 +94,7 @@ func ParseStrings(in []string) ([]string, []string) {
 	if len(n) > 0 {
 		outN = append(outN, n)
 	}
-	return outStr, outN
+	return strings.Join(outStr, " "), outN
 }
 
 func readIntoBuffer(i int, in []string, buf numbers) (out numbers, ok bool) {
