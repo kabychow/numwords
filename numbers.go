@@ -62,11 +62,14 @@ func (ns numbers) Int() (int, error) {
 	return int(out), err
 }
 
-func (ns numbers) flush(s []string) []string {
+func (ns numbers) flush(s []string) ([]string, string) {
 	if len(ns) > 0 {
-		s = append(s, reduce(ns).strings()...)
+		ss := reduce(ns).strings()
+		n := strings.Join(ss, "")
+		s = append(s, ss...)
+		return s, n
 	}
-	return s
+	return s, ""
 }
 
 // Reduce destructivley converts the numbers set to its minimal form based on

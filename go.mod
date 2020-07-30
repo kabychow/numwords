@@ -1,5 +1,3 @@
-module github.com/rodaine/numwords
+module github.com/khaibin/numwords
 
 go 1.14
-
-require github.com/stretchr/testify v1.6.1

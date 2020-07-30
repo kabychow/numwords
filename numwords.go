@@ -2,10 +2,12 @@
 // actual numeric values. The converted numbers can be parsed out as strings,
 // integers, or floats as desired.
 //
-// Source: https://github.com/rodaine/numwords
+// Source: https://github.com/khaibin/numwords
 package numwords
 
-import "strings"
+import (
+	"strings"
+)
 
 // ParseFloat reads a text string and converts it to its float value. An error
 // is returned if the if the string cannot be resolved to a single float value.
@@ -43,39 +45,44 @@ func ParseInt(s string) (int, error) {
 // ParseString reads a text string and converts all numbers contained within to
 // their appropriate values. Integers are preserved exactly while floating point
 // numbers are limited to six decimal places. The rest of the string is preserved.
-func ParseString(s string) string {
+func ParseString(s string) (string, []string) {
 	in := explode(s)
-	out := ParseStrings(in)
-	return strings.Join(out, " ")
+	outStr, outN := ParseStrings(in)
+	return strings.Join(outStr, " "), outN
 }
 
 // ParseStrings performs the same actions as ParseString but operates on a pre-
 // sanitized and split string. This method is exposed for convenience if further
 // processing of the string is required.
-func ParseStrings(in []string) []string {
-	out := make([]string, 0, 1)
+func ParseStrings(in []string) ([]string, []string) {
+	var outStr []string
+	var outN []string
 	buf := numbers{}
 
 	ok := false
+	var n string
 	for i, s := range in {
 		if buf, ok = readIntoBuffer(i, in, buf); !ok {
-			out = buf.flush(out)
+			outStr, n = buf.flush(outStr)
 			buf = buf[:0]
-			out = append(out, s)
+			if len(n) > 0 {
+				outN = append(outN, n)
+			}
+			outStr = append(outStr, s)
 		}
 	}
-
-	return buf.flush(out)
+	outStr, n = buf.flush(outStr)
+	if len(n) > 0 {
+		outN = append(outN, n)
+	}
+	return outStr, outN
 }
 
 func readIntoBuffer(i int, in []string, buf numbers) (out numbers, ok bool) {
 	s := in[i]
 	n, ok := lookupNumber(s)
 
-	if ok && n.typ != numAnd {
-		buf = append(buf, n)
-		return buf, ok
-	} else if ok && n.typ == numAnd && shouldIncludeAnd(in, buf, i) {
+	if ok && (n.typ != numAnd || (n.typ == numAnd && shouldIncludeAnd(in, buf, i))) {
 		buf = append(buf, n)
 		return buf, ok
 	} else if n, ok = maybeNumeric(s); ok {
